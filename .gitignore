@@ -1,0 +1,22 @@
+# .NET
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# React / Node
+node_modules/
+dist/
+
+# Environment / secrets
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
