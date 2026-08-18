@@ -1,0 +1,415 @@
+* {
+  box-sizing: border-box;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family:
+    Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: #f5f7fb;
+  color: #111827;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 48px 24px;
+}
+
+.app-header {
+  max-width: 1100px;
+  margin: 0 auto 40px;
+  text-align: center;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  color: #111827;
+}
+
+.app-header p {
+  margin: 8px 0 0;
+  font-size: 16px;
+  color: #6b7280;
+}
+
+.calculator-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.salary-form-card {
+  width: 100%;
+  max-width: 480px;
+  padding: 32px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  box-shadow:
+    0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.form-header {
+  margin-bottom: 28px;
+}
+
+.form-eyebrow {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  background: #eef2ff;
+  color: #4338ca;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.form-header h2 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.2;
+  color: #111827;
+}
+
+.form-header p {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 15px;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+.salary-input-wrapper {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.salary-input-wrapper:focus-within {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+.salary-input-wrapper span {
+  padding-left: 14px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.salary-input-wrapper input {
+  border: none;
+  box-shadow: none;
+}
+
+.salary-input-wrapper input:focus {
+  border: none;
+  box-shadow: none;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.calculate-button {
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-radius: 10px;
+  background: #4f46e5;
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.calculate-button:hover {
+  transform: translateY(-1px);
+}
+
+.calculate-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.form-error {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .salary-form-card {
+    padding: 22px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+.calculator-container {
+  display: grid;
+  grid-template-columns: 480px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.salary-result-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow:
+    0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.result-main {
+  padding: 36px;
+  background:
+    linear-gradient(
+      135deg,
+      #312e81 0%,
+      #4f46e5 55%,
+      #6366f1 100%
+    );
+  color: #ffffff;
+}
+
+.result-label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.82;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.result-monthly {
+  font-size: 44px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+}
+
+.result-period {
+  display: block;
+  margin-top: 8px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.result-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.result-stats div {
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+}
+
+.result-stats span {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.result-stats strong {
+  font-size: 14px;
+}
+
+.effective-tax {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 14px;
+}
+
+.tax-breakdown {
+  padding: 30px 36px;
+}
+
+.tax-breakdown h3 {
+  margin: 0 0 20px;
+  font-size: 18px;
+}
+
+.tax-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 13px 0;
+  border-bottom: 1px solid #eef0f4;
+  font-size: 14px;
+}
+
+.tax-row:last-child {
+  border-bottom: none;
+}
+
+.tax-row span {
+  color: #6b7280;
+}
+
+.tax-row strong {
+  color: #111827;
+}
+
+@media (max-width: 900px) {
+  .calculator-container {
+    grid-template-columns: 1fr;
+  }
+
+  .salary-form-card {
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .app {
+    padding: 28px 16px;
+  }
+
+  .app-header {
+    margin-bottom: 28px;
+  }
+
+  .app-header h1 {
+    font-size: 34px;
+  }
+
+  .result-main,
+  .tax-breakdown {
+    padding: 24px;
+  }
+
+  .result-monthly {
+    font-size: 36px;
+  }
+
+  .result-stats {
+    grid-template-columns: 1fr;
+  }
+}
+.income-visual {
+  margin-top: 22px;
+}
+
+.income-visual-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.income-bar {
+  display: flex;
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.income-bar-net {
+  height: 100%;
+  background: #ffffff;
+}
+
+.income-bar-tax {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.income-legend {
+  display: flex;
+  gap: 18px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.income-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.net-dot {
+  background: #ffffff;
+}
+
+.tax-dot {
+  background: rgba(255, 255, 255, 0.35);
+}

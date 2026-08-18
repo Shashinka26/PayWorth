@@ -2,11 +2,23 @@ using PayWorth.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add controller support
+// Controllers
 builder.Services.AddControllers();
 
 // OpenAPI
 builder.Services.AddOpenApi();
+
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 // Dependency Injection
 builder.Services.AddScoped<
@@ -24,8 +36,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-// Development eke HTTPS redirect warning eka avoid karanna
-// app.UseHttpsRedirection();
+// Enable CORS
+app.UseCors("AllowFrontend");
 
 app.UseAuthorization();
 
