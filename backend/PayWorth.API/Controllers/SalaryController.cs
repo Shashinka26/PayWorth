@@ -27,11 +27,9 @@ public class SalaryController : ControllerBase
             );
         }
 
-        if (request.TaxYear != 2026)
+        if (request.TaxYear != 2025 && request.TaxYear != 2026)
         {
-            return BadRequest(
-                "Currently only tax year 2026 is supported."
-            );
+            return BadRequest("Only tax years 2025 and 2026 are supported.");
         }
 
         try

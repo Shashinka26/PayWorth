@@ -413,3 +413,60 @@ body {
 .tax-dot {
   background: rgba(255, 255, 255, 0.35);
 }
+
+.input-mode {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 4px;
+  background: #eef0f7;
+  border-radius: 10px;
+}
+
+.input-mode button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: #555;
+  padding: 10px 14px;
+  border-radius: 7px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.input-mode button.active {
+  background: white;
+  color: #4f46e5;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.input-mode button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.hourly-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.annual-equivalent {
+  margin: -2px 0 18px;
+  padding: 12px 14px;
+  background: #f4f3ff;
+  border-radius: 8px;
+  color: #555;
+  font-size: 14px;
+}
+
+.annual-equivalent strong {
+  color: #4f46e5;
+}
+
+@media (max-width: 600px) {
+  .hourly-fields {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

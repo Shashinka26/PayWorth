@@ -11,12 +11,18 @@ public class SalaryCalculationService : ISalaryCalculationService
     {
         _stateTaxService = stateTaxService;
     }
+
     public SalaryResult Calculate(SalaryRequest request)
     {
+        ValidateTaxYear(request.TaxYear);
+
         var gross = request.AnnualSalary;
 
         var standardDeduction =
-            GetStandardDeduction(request.FilingStatus);
+            GetStandardDeduction(
+                request.FilingStatus,
+                request.TaxYear
+            );
 
         var taxableIncome =
             Math.Max(0, gross - standardDeduction);
@@ -24,11 +30,15 @@ public class SalaryCalculationService : ISalaryCalculationService
         var federalTax =
             CalculateFederalIncomeTax(
                 taxableIncome,
-                request.FilingStatus
+                request.FilingStatus,
+                request.TaxYear
             );
 
         var socialSecurity =
-            CalculateSocialSecurity(gross);
+            CalculateSocialSecurity(
+                gross,
+                request.TaxYear
+            );
 
         var medicare =
             CalculateMedicare(
@@ -36,14 +46,13 @@ public class SalaryCalculationService : ISalaryCalculationService
                 request.FilingStatus
             );
 
-        // State tax will be added next.
         var stateTax =
-        _stateTaxService.Calculate(
-        gross,
-        request.State,
-        request.FilingStatus,
-        request.TaxYear
-        );
+            _stateTaxService.Calculate(
+                gross,
+                request.State,
+                request.FilingStatus,
+                request.TaxYear
+            );
 
         var totalTax =
             federalTax +
@@ -81,48 +90,95 @@ public class SalaryCalculationService : ISalaryCalculationService
     }
 
     private decimal GetStandardDeduction(
-        string filingStatus)
+        string filingStatus,
+        int taxYear)
     {
-        return NormalizeFilingStatus(filingStatus) switch
+        var status =
+            NormalizeFilingStatus(filingStatus);
+
+        return taxYear switch
         {
-            "single" => 16100m,
+            2025 => status switch
+            {
+                "single" => 15750m,
+                "marriedjointly" => 31500m,
+                "marriedseparately" => 15750m,
+                "headofhousehold" => 23625m,
 
-            "marriedjointly" => 32200m,
+                _ => throw new ArgumentException(
+                    "Unsupported filing status."
+                )
+            },
 
-            "marriedseparately" => 16100m,
+            2026 => status switch
+            {
+                "single" => 16100m,
+                "marriedjointly" => 32200m,
+                "marriedseparately" => 16100m,
+                "headofhousehold" => 24150m,
 
-            "headofhousehold" => 24150m,
+                _ => throw new ArgumentException(
+                    "Unsupported filing status."
+                )
+            },
 
             _ => throw new ArgumentException(
-                "Unsupported filing status."
+                $"Unsupported tax year: {taxYear}"
             )
         };
     }
 
     private decimal CalculateFederalIncomeTax(
         decimal taxableIncome,
-        string filingStatus)
+        string filingStatus,
+        int taxYear)
     {
         var status =
             NormalizeFilingStatus(filingStatus);
 
         var brackets =
-            status switch
+            taxYear switch
             {
-                "single" =>
-                    GetSingleBrackets(),
+                2025 => status switch
+                {
+                    "single" =>
+                        Get2025SingleBrackets(),
 
-                "marriedjointly" =>
-                    GetMarriedJointlyBrackets(),
+                    "marriedjointly" =>
+                        Get2025MarriedJointlyBrackets(),
 
-                "marriedseparately" =>
-                    GetMarriedSeparatelyBrackets(),
+                    "marriedseparately" =>
+                        Get2025MarriedSeparatelyBrackets(),
 
-                "headofhousehold" =>
-                    GetHeadOfHouseholdBrackets(),
+                    "headofhousehold" =>
+                        Get2025HeadOfHouseholdBrackets(),
+
+                    _ => throw new ArgumentException(
+                        "Unsupported filing status."
+                    )
+                },
+
+                2026 => status switch
+                {
+                    "single" =>
+                        Get2026SingleBrackets(),
+
+                    "marriedjointly" =>
+                        Get2026MarriedJointlyBrackets(),
+
+                    "marriedseparately" =>
+                        Get2026MarriedSeparatelyBrackets(),
+
+                    "headofhousehold" =>
+                        Get2026HeadOfHouseholdBrackets(),
+
+                    _ => throw new ArgumentException(
+                        "Unsupported filing status."
+                    )
+                },
 
                 _ => throw new ArgumentException(
-                    "Unsupported filing status."
+                    $"Unsupported tax year: {taxYear}"
                 )
             };
 
@@ -157,12 +213,21 @@ public class SalaryCalculationService : ISalaryCalculationService
     }
 
     private decimal CalculateSocialSecurity(
-        decimal gross)
+        decimal gross,
+        int taxYear)
     {
         const decimal rate = 0.062m;
 
-        const decimal wageBase =
-            184500m;
+        var wageBase =
+            taxYear switch
+            {
+                2025 => 176100m,
+                2026 => 184500m,
+
+                _ => throw new ArgumentException(
+                    $"Unsupported tax year: {taxYear}"
+                )
+            };
 
         var taxableWages =
             Math.Min(gross, wageBase);
@@ -213,8 +278,76 @@ public class SalaryCalculationService : ISalaryCalculationService
         return medicare;
     }
 
+    // =========================
+    // 2025 FEDERAL TAX BRACKETS
+    // =========================
+
     private List<TaxBracket>
-        GetSingleBrackets()
+        Get2025SingleBrackets()
+    {
+        return new()
+        {
+            new(11925m, 0.10m),
+            new(48475m, 0.12m),
+            new(103350m, 0.22m),
+            new(197300m, 0.24m),
+            new(250525m, 0.32m),
+            new(626350m, 0.35m),
+            new(decimal.MaxValue, 0.37m)
+        };
+    }
+
+    private List<TaxBracket>
+        Get2025MarriedJointlyBrackets()
+    {
+        return new()
+        {
+            new(23850m, 0.10m),
+            new(96950m, 0.12m),
+            new(206700m, 0.22m),
+            new(394600m, 0.24m),
+            new(501050m, 0.32m),
+            new(751600m, 0.35m),
+            new(decimal.MaxValue, 0.37m)
+        };
+    }
+
+    private List<TaxBracket>
+        Get2025MarriedSeparatelyBrackets()
+    {
+        return new()
+        {
+            new(11925m, 0.10m),
+            new(48475m, 0.12m),
+            new(103350m, 0.22m),
+            new(197300m, 0.24m),
+            new(250525m, 0.32m),
+            new(375800m, 0.35m),
+            new(decimal.MaxValue, 0.37m)
+        };
+    }
+
+    private List<TaxBracket>
+        Get2025HeadOfHouseholdBrackets()
+    {
+        return new()
+        {
+            new(17000m, 0.10m),
+            new(64850m, 0.12m),
+            new(103350m, 0.22m),
+            new(197300m, 0.24m),
+            new(250500m, 0.32m),
+            new(626350m, 0.35m),
+            new(decimal.MaxValue, 0.37m)
+        };
+    }
+
+    // =========================
+    // 2026 FEDERAL TAX BRACKETS
+    // =========================
+
+    private List<TaxBracket>
+        Get2026SingleBrackets()
     {
         return new()
         {
@@ -229,7 +362,7 @@ public class SalaryCalculationService : ISalaryCalculationService
     }
 
     private List<TaxBracket>
-        GetMarriedJointlyBrackets()
+        Get2026MarriedJointlyBrackets()
     {
         return new()
         {
@@ -244,7 +377,7 @@ public class SalaryCalculationService : ISalaryCalculationService
     }
 
     private List<TaxBracket>
-        GetMarriedSeparatelyBrackets()
+        Get2026MarriedSeparatelyBrackets()
     {
         return new()
         {
@@ -259,7 +392,7 @@ public class SalaryCalculationService : ISalaryCalculationService
     }
 
     private List<TaxBracket>
-        GetHeadOfHouseholdBrackets()
+        Get2026HeadOfHouseholdBrackets()
     {
         return new()
         {
@@ -271,6 +404,17 @@ public class SalaryCalculationService : ISalaryCalculationService
             new(640600m, 0.35m),
             new(decimal.MaxValue, 0.37m)
         };
+    }
+
+    private void ValidateTaxYear(int taxYear)
+    {
+        if (taxYear != 2025 &&
+            taxYear != 2026)
+        {
+            throw new ArgumentException(
+                $"Unsupported tax year: {taxYear}"
+            );
+        }
     }
 
     private string NormalizeFilingStatus(

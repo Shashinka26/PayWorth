@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ChangeEvent } from "react";
 import type { SalaryRequest, SalaryResult } from "../types/salary";
 import { calculateSalary } from "../services/salaryApi";
 
@@ -9,6 +9,14 @@ type SalaryFormProps = {
 
 function SalaryForm({ onResult, onInputChange }: SalaryFormProps) {
   const [annualSalary, setAnnualSalary] = useState("85000");
+
+  const [inputMode, setInputMode] =
+    useState<"annual" | "hourly">("annual");
+
+  const [hourlyRate, setHourlyRate] = useState("30");
+  const [hoursPerWeek, setHoursPerWeek] = useState("40");
+  const [weeksPerYear, setWeeksPerYear] = useState("52");
+
   const [state, setState] = useState("CA");
   const [filingStatus, setFilingStatus] = useState("single");
   const [taxYear, setTaxYear] = useState(2026);
@@ -21,12 +29,59 @@ function SalaryForm({ onResult, onInputChange }: SalaryFormProps) {
 
     setError("");
 
-    // Validate salary
-    const salary = Number(annualSalary);
+    // Calculate annual salary
+    let salary: number;
 
-    if (!annualSalary.trim()) {
-      setError("Please enter your annual salary.");
-      return;
+    if (inputMode === "annual") {
+      salary = Number(annualSalary);
+    } else {
+      const hourly = Number(hourlyRate);
+      const hours = Number(hoursPerWeek);
+      const weeks = Number(weeksPerYear);
+
+      salary = hourly * hours * weeks;
+    }
+
+    // Validate input
+    if (inputMode === "annual") {
+      if (!annualSalary.trim()) {
+        setError("Please enter your annual salary.");
+        return;
+      }
+    } else {
+      if (!hourlyRate.trim()) {
+        setError("Please enter your hourly pay.");
+        return;
+      }
+
+      if (!hoursPerWeek.trim()) {
+        setError("Please enter hours per week.");
+        return;
+      }
+
+      if (!weeksPerYear.trim()) {
+        setError("Please enter weeks per year.");
+        return;
+      }
+
+      const hourly = Number(hourlyRate);
+      const hours = Number(hoursPerWeek);
+      const weeks = Number(weeksPerYear);
+
+      if (!Number.isFinite(hourly) || hourly <= 0) {
+        setError("Hourly pay must be greater than $0.");
+        return;
+      }
+
+      if (!Number.isFinite(hours) || hours <= 0 || hours > 168) {
+        setError("Hours per week must be between 1 and 168.");
+        return;
+      }
+
+      if (!Number.isFinite(weeks) || weeks <= 0 || weeks > 52) {
+        setError("Weeks per year must be between 1 and 52.");
+        return;
+      }
     }
 
     if (!Number.isFinite(salary)) {
@@ -56,9 +111,11 @@ function SalaryForm({ onResult, onInputChange }: SalaryFormProps) {
 
       const result = await calculateSalary(request);
 
-await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1000)
+      );
 
-onResult(result);
+      onResult(result);
     } catch (err) {
       console.error("Salary calculation failed:", err);
       setError("Unable to calculate salary. Please try again.");
@@ -68,15 +125,39 @@ onResult(result);
   };
 
   const handleSalaryChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: ChangeEvent<HTMLInputElement>
   ) => {
     setAnnualSalary(event.target.value);
     setError("");
     onInputChange();
   };
 
+  const handleHourlyRateChange = (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    setHourlyRate(event.target.value);
+    setError("");
+    onInputChange();
+  };
+
+  const handleHoursPerWeekChange = (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    setHoursPerWeek(event.target.value);
+    setError("");
+    onInputChange();
+  };
+
+  const handleWeeksPerYearChange = (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    setWeeksPerYear(event.target.value);
+    setError("");
+    onInputChange();
+  };
+
   const handleStateChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
+    event: ChangeEvent<HTMLSelectElement>
   ) => {
     setState(event.target.value);
     setError("");
@@ -84,7 +165,7 @@ onResult(result);
   };
 
   const handleFilingStatusChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
+    event: ChangeEvent<HTMLSelectElement>
   ) => {
     setFilingStatus(event.target.value);
     setError("");
@@ -92,17 +173,30 @@ onResult(result);
   };
 
   const handleTaxYearChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
+    event: ChangeEvent<HTMLSelectElement>
   ) => {
     setTaxYear(Number(event.target.value));
     setError("");
     onInputChange();
   };
 
+  const handleInputModeChange = (
+    mode: "annual" | "hourly"
+  ) => {
+    setInputMode(mode);
+    setError("");
+    onInputChange();
+  };
+
+  const annualEquivalent =
+    Number(hourlyRate || 0) *
+    Number(hoursPerWeek || 0) *
+    Number(weeksPerYear || 0);
+
   return (
     <form className="salary-form" onSubmit={handleSubmit}>
       <div className="calculator-badge">
-        2026 US Salary Calculator
+        {taxYear} US Salary Calculator
       </div>
 
       <h2>Calculate your take-home pay</h2>
@@ -112,24 +206,121 @@ onResult(result);
         after taxes.
       </p>
 
-      {/* Annual Salary */}
-      <div className="form-group">
-        <label htmlFor="annualSalary">Annual salary</label>
+      {/* Input Mode */}
+      <div className="input-mode">
+        <button
+          type="button"
+          className={inputMode === "annual" ? "active" : ""}
+          onClick={() => handleInputModeChange("annual")}
+          disabled={loading}
+        >
+          Annual Salary
+        </button>
 
-        <div className="salary-input-wrapper">
-          <span>$</span>
-
-          <input
-  id="annualSalary"
-  type="number"
-  value={annualSalary}
-  onChange={handleSalaryChange}
-  step="1"
-  placeholder="85000"
-  disabled={loading}
-/>
-        </div>
+        <button
+          type="button"
+          className={inputMode === "hourly" ? "active" : ""}
+          onClick={() => handleInputModeChange("hourly")}
+          disabled={loading}
+        >
+          Hourly Pay
+        </button>
       </div>
+
+      {/* Annual Salary */}
+      {inputMode === "annual" && (
+        <div className="form-group">
+          <label htmlFor="annualSalary">
+            Annual salary
+          </label>
+
+          <div className="salary-input-wrapper">
+            <span>$</span>
+
+            <input
+              id="annualSalary"
+              type="number"
+              min="0"
+              value={annualSalary}
+              onChange={handleSalaryChange}
+              step="1"
+              placeholder="85000"
+              disabled={loading}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Hourly Pay */}
+      {inputMode === "hourly" && (
+        <>
+          <div className="form-group">
+            <label htmlFor="hourlyRate">
+              Hourly pay
+            </label>
+
+            <div className="salary-input-wrapper">
+              <span>$</span>
+
+              <input
+                id="hourlyRate"
+                type="number"
+                min="0"
+                step="0.01"
+                value={hourlyRate}
+                onChange={handleHourlyRateChange}
+                placeholder="30"
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className="hourly-fields">
+            <div className="form-group">
+              <label htmlFor="hoursPerWeek">
+                Hours per week
+              </label>
+
+              <input
+                id="hoursPerWeek"
+                type="number"
+                min="1"
+                max="168"
+                value={hoursPerWeek}
+                onChange={handleHoursPerWeekChange}
+                disabled={loading}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="weeksPerYear">
+                Weeks per year
+              </label>
+
+              <input
+                id="weeksPerYear"
+                type="number"
+                min="1"
+                max="52"
+                value={weeksPerYear}
+                onChange={handleWeeksPerYearChange}
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className="annual-equivalent">
+            Annual equivalent:{" "}
+            <strong>
+              $
+              {annualEquivalent.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </strong>
+          </div>
+        </>
+      )}
 
       {/* State + Tax Year */}
       <div className="form-row">
@@ -142,10 +333,17 @@ onResult(result);
             onChange={handleStateChange}
             disabled={loading}
           >
+            <option value="AK">Alaska</option>
             <option value="CA">California</option>
-            <option value="NY">New York</option>
-            <option value="TX">Texas</option>
             <option value="FL">Florida</option>
+            <option value="NH">New Hampshire</option>
+            <option value="NV">Nevada</option>
+            <option value="NY">New York</option>
+            <option value="SD">South Dakota</option>
+            <option value="TN">Tennessee</option>
+            <option value="TX">Texas</option>
+            <option value="WA">Washington</option>
+            <option value="WY">Wyoming</option>
           </select>
         </div>
 
@@ -166,7 +364,9 @@ onResult(result);
 
       {/* Filing Status */}
       <div className="form-group">
-        <label htmlFor="filingStatus">Filing status</label>
+        <label htmlFor="filingStatus">
+          Filing status
+        </label>
 
         <select
           id="filingStatus"
@@ -175,7 +375,15 @@ onResult(result);
           disabled={loading}
         >
           <option value="single">Single</option>
-          <option value="married">Married</option>
+          <option value="marriedjointly">
+            Married Filing Jointly
+          </option>
+          <option value="marriedseparately">
+            Married Filing Separately
+          </option>
+          <option value="headofhousehold">
+            Head of Household
+          </option>
         </select>
       </div>
 
@@ -186,7 +394,7 @@ onResult(result);
         </div>
       )}
 
-      {/* Button */}
+      {/* Calculate Button */}
       <button
         type="submit"
         className="calculate-button"

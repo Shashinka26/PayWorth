@@ -7,10 +7,10 @@ public class CaliforniaTaxCalculator
         string filingStatus,
         int taxYear)
     {
-        if (taxYear != 2026)
+        if (taxYear != 2025 && taxYear != 2026)
         {
             throw new NotSupportedException(
-                "California currently supports tax year 2026 only."
+                $"California tax calculation for {taxYear} is not supported."
             );
         }
 
@@ -21,7 +21,7 @@ public class CaliforniaTaxCalculator
 
         var taxableIncome =
             Math.Max(
-                0,
+                0m,
                 annualIncome - standardDeduction
             );
 
@@ -33,6 +33,25 @@ public class CaliforniaTaxCalculator
                 taxableIncome,
                 brackets
             );
+
+        // California personal exemption credit.
+        // Current simplified calculator assumes one taxpayer
+        // and no dependents.
+        var exemptionCredit = 153m;
+
+        tax = Math.Max(
+            0m,
+            tax - exemptionCredit
+        );
+
+        // California Mental Health Services Tax:
+        // additional 1% on taxable income over $1,000,000.
+        if (taxableIncome > 1_000_000m)
+        {
+            tax +=
+                (taxableIncome - 1_000_000m) *
+                0.01m;
+        }
 
         return Math.Round(
             tax,
@@ -46,13 +65,17 @@ public class CaliforniaTaxCalculator
     {
         return status switch
         {
-            "single" => 5706m,
+            "single" =>
+                5706m,
 
-            "marriedseparately" => 5706m,
+            "marriedseparately" =>
+                5706m,
 
-            "marriedjointly" => 11412m,
+            "marriedjointly" =>
+                11412m,
 
-            "headofhousehold" => 11412m,
+            "headofhousehold" =>
+                11412m,
 
             _ => throw new ArgumentException(
                 "Unsupported filing status for California."

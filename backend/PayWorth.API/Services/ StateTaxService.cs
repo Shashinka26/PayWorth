@@ -5,16 +5,18 @@ namespace PayWorth.API.Services;
 public class StateTaxService : IStateTaxService
 {
     private static readonly HashSet<string> NoIndividualIncomeTaxStates =
-        new(StringComparer.OrdinalIgnoreCase)
-        {
-            "AK",
-            "FL",
-            "NV",
-            "SD",
-            "TN",
-            "TX",
-            "WY"
-        };
+     new(StringComparer.OrdinalIgnoreCase)
+     {
+        "AK",
+        "FL",
+        "NV",
+        "NH",
+        "SD",
+        "TN",
+        "TX",
+        "WA",
+        "WY"
+     };
 
     public decimal Calculate(
         decimal annualIncome,
