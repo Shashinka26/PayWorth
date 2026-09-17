@@ -55,6 +55,66 @@ public class StateTaxService : IStateTaxService
             );
         }
 
+        if (normalizedState == "IL")
+        {
+            var calculator =
+                new IllinoisTaxCalculator();
+
+            return calculator.Calculate(
+                annualIncome,
+                filingStatus,
+                taxYear
+            );
+        }
+
+        if (normalizedState == "PA")
+        {
+            var calculator =
+                new PennsylvaniaTaxCalculator();
+
+            return calculator.Calculate(
+                annualIncome,
+                filingStatus,
+                taxYear
+            );
+        }
+
+        if (normalizedState == "NJ")
+        {
+            var calculator =
+                new NewJerseyTaxCalculator();
+
+            return calculator.Calculate(
+                annualIncome,
+                filingStatus,
+                taxYear
+            );
+        }
+
+        if (normalizedState == "MA")
+        {
+            var calculator =
+                new MassachusettsTaxCalculator();
+
+            return calculator.Calculate(
+                annualIncome,
+                filingStatus,
+                taxYear
+            );
+        }
+
+        if (normalizedState == "NC")
+        {
+            var calculator =
+                new NorthCarolinaTaxCalculator();
+
+            return calculator.Calculate(
+                annualIncome,
+                filingStatus,
+                taxYear
+            );
+        }
+
         throw new NotSupportedException(
             $"State tax calculation for {normalizedState} is not supported yet."
         );
