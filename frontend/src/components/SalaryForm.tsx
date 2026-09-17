@@ -1,5 +1,5 @@
-import { useState, type FormEvent, type ChangeEvent } from "react";
-import type { SalaryRequest, SalaryResult } from "../types/salary";
+import { useState } from "react";
+import type { SalaryResult } from "../types/salary";
 import { calculateSalary } from "../services/salaryApi";
 
 type SalaryFormProps = {
@@ -8,6 +8,7 @@ type SalaryFormProps = {
   onPayFrequencyChange: (frequency: string) => void;
   initialState?: string;
   initialTaxYear?: number;
+  initialSalary?: string;
 };
 
 function SalaryForm({
@@ -16,8 +17,9 @@ function SalaryForm({
   onPayFrequencyChange,
   initialState = "CA",
   initialTaxYear = 2026,
+  initialSalary = "85000",
 }: SalaryFormProps) {
-  const [annualSalary, setAnnualSalary] = useState("85000");
+  const [annualSalary, setAnnualSalary] = useState(initialSalary);
 
   const [inputMode, setInputMode] =
     useState<"annual" | "hourly">("annual");
@@ -34,33 +36,103 @@ function SalaryForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleStateChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setState(event.target.value);
+    setError("");
+    onInputChange();
+  };
+
+  const handleTaxYearChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setTaxYear(Number(event.target.value));
+    setError("");
+    onInputChange();
+  };
+
+  const handleFilingStatusChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setFilingStatus(event.target.value);
+    setError("");
+    onInputChange();
+  };
+
+  const handlePayFrequencyChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const frequency = event.target.value;
+
+    setPayFrequency(frequency);
+    onPayFrequencyChange(frequency);
+  };
+
+  const handleAnnualSalaryChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setAnnualSalary(event.target.value);
+    setError("");
+    onInputChange();
+  };
+
+  const handleHourlyRateChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setHourlyRate(event.target.value);
+    setError("");
+    onInputChange();
+  };
+
+  const handleHoursPerWeekChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setHoursPerWeek(event.target.value);
+    setError("");
+    onInputChange();
+  };
+
+  const handleWeeksPerYearChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setWeeksPerYear(event.target.value);
+    setError("");
+    onInputChange();
+  };
+
+  const handleInputModeChange = (
+    mode: "annual" | "hourly"
+  ) => {
+    setInputMode(mode);
+    setError("");
+    onInputChange();
+  };
+
+  const handleSubmit = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
     event.preventDefault();
 
     setError("");
+    onInputChange();
 
-    // Calculate annual salary
-    let salary: number;
+    let salary = 0;
 
     if (inputMode === "annual") {
       salary = Number(annualSalary);
-    } else {
-      const hourly = Number(hourlyRate);
-      const hours = Number(hoursPerWeek);
-      const weeks = Number(weeksPerYear);
 
-      salary = hourly * hours * weeks;
-    }
-
-    // Validate input
-    if (inputMode === "annual") {
       if (!annualSalary.trim()) {
         setError("Please enter your annual salary.");
         return;
       }
     } else {
+      const rate = Number(hourlyRate);
+      const hours = Number(hoursPerWeek);
+      const weeks = Number(weeksPerYear);
+
       if (!hourlyRate.trim()) {
-        setError("Please enter your hourly pay.");
+        setError("Please enter your hourly rate.");
         return;
       }
 
@@ -74,42 +146,35 @@ function SalaryForm({
         return;
       }
 
-      const hourly = Number(hourlyRate);
-      const hours = Number(hoursPerWeek);
-      const weeks = Number(weeksPerYear);
-
-      if (!Number.isFinite(hourly) || hourly <= 0) {
-        setError("Hourly pay must be greater than $0.");
+      if (!Number.isFinite(rate) || rate <= 0) {
+        setError("Please enter a valid hourly rate.");
         return;
       }
 
-      if (!Number.isFinite(hours) || hours <= 0 || hours > 168) {
+      if (hours < 1 || hours > 168) {
         setError("Hours per week must be between 1 and 168.");
         return;
       }
 
-      if (!Number.isFinite(weeks) || weeks <= 0 || weeks > 52) {
+      if (weeks < 1 || weeks > 52) {
         setError("Weeks per year must be between 1 and 52.");
         return;
       }
+
+      salary = rate * hours * weeks;
     }
 
-    if (!Number.isFinite(salary)) {
-      setError("Please enter a valid salary.");
-      return;
-    }
-
-    if (salary <= 0) {
-      setError("Salary must be greater than $0.");
+    if (!Number.isFinite(salary) || salary <= 0) {
+      setError("Please enter a valid salary amount.");
       return;
     }
 
     if (salary > 100000000) {
-      setError("Please enter a reasonable salary amount.");
+      setError("Salary cannot exceed $100,000,000.");
       return;
     }
 
-    const request: SalaryRequest = {
+    const request = {
       annualSalary: salary,
       state,
       filingStatus,
@@ -119,95 +184,25 @@ function SalaryForm({
     try {
       setLoading(true);
 
-      const result = await calculateSalary(request);
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1000)
-      );
+      const [result] = await Promise.all([
+        calculateSalary(request),
+        new Promise((resolve) => setTimeout(resolve, 1000)),
+      ]);
 
       onResult(result);
     } catch (err) {
-      console.error("Salary calculation failed:", err);
+      console.error(err);
       setError("Unable to calculate salary. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSalaryChange = (
-    event: ChangeEvent<HTMLInputElement>
-  ) => {
-    setAnnualSalary(event.target.value);
-    setError("");
-    onInputChange();
-  };
-
-  const handleHourlyRateChange = (
-    event: ChangeEvent<HTMLInputElement>
-  ) => {
-    setHourlyRate(event.target.value);
-    setError("");
-    onInputChange();
-  };
-
-  const handleHoursPerWeekChange = (
-    event: ChangeEvent<HTMLInputElement>
-  ) => {
-    setHoursPerWeek(event.target.value);
-    setError("");
-    onInputChange();
-  };
-
-  const handleWeeksPerYearChange = (
-    event: ChangeEvent<HTMLInputElement>
-  ) => {
-    setWeeksPerYear(event.target.value);
-    setError("");
-    onInputChange();
-  };
-
-  const handleStateChange = (
-    event: ChangeEvent<HTMLSelectElement>
-  ) => {
-    setState(event.target.value);
-    setError("");
-    onInputChange();
-  };
-
-  const handleFilingStatusChange = (
-    event: ChangeEvent<HTMLSelectElement>
-  ) => {
-    setFilingStatus(event.target.value);
-    setError("");
-    onInputChange();
-  };
-
-  const handleTaxYearChange = (
-    event: ChangeEvent<HTMLSelectElement>
-  ) => {
-    setTaxYear(Number(event.target.value));
-    setError("");
-    onInputChange();
-  };
-
-  const handleInputModeChange = (
-    mode: "annual" | "hourly"
-  ) => {
-    setInputMode(mode);
-    setError("");
-    onInputChange();
-  };
-
-  const annualEquivalent =
-    Number(hourlyRate || 0) *
-    Number(hoursPerWeek || 0) *
-    Number(weeksPerYear || 0);
-
   return (
     <form className="salary-form" onSubmit={handleSubmit}>
-      <div className="calculator-badge">
+      <p className="calculator-eyebrow">
         {taxYear} US Salary Calculator
-      </div>
+      </p>
 
       <h2>Calculate your take-home pay</h2>
 
@@ -216,11 +211,12 @@ function SalaryForm({
         after taxes.
       </p>
 
-      {/* Input Mode */}
-      <div className="input-mode">
+      <div className="input-mode-toggle">
         <button
           type="button"
-          className={inputMode === "annual" ? "active" : ""}
+          className={
+            inputMode === "annual" ? "active" : ""
+          }
           onClick={() => handleInputModeChange("annual")}
           disabled={loading}
         >
@@ -229,7 +225,9 @@ function SalaryForm({
 
         <button
           type="button"
-          className={inputMode === "hourly" ? "active" : ""}
+          className={
+            inputMode === "hourly" ? "active" : ""
+          }
           onClick={() => handleInputModeChange("hourly")}
           disabled={loading}
         >
@@ -237,39 +235,35 @@ function SalaryForm({
         </button>
       </div>
 
-      {/* Annual Salary */}
-      {inputMode === "annual" && (
+      {inputMode === "annual" ? (
         <div className="form-group">
           <label htmlFor="annualSalary">
             Annual salary
           </label>
 
-          <div className="salary-input-wrapper">
+          <div className="currency-input">
             <span>$</span>
 
             <input
               id="annualSalary"
               type="number"
               min="0"
+              step="100"
               value={annualSalary}
-              onChange={handleSalaryChange}
-              step="1"
-              placeholder="85000"
+              onChange={handleAnnualSalaryChange}
               disabled={loading}
+              placeholder="85000"
             />
           </div>
         </div>
-      )}
-
-      {/* Hourly Pay */}
-      {inputMode === "hourly" && (
+      ) : (
         <>
           <div className="form-group">
             <label htmlFor="hourlyRate">
-              Hourly pay
+              Hourly rate
             </label>
 
-            <div className="salary-input-wrapper">
+            <div className="currency-input">
               <span>$</span>
 
               <input
@@ -279,13 +273,13 @@ function SalaryForm({
                 step="0.01"
                 value={hourlyRate}
                 onChange={handleHourlyRateChange}
-                placeholder="30"
                 disabled={loading}
+                placeholder="30"
               />
             </div>
           </div>
 
-          <div className="hourly-fields">
+          <div className="form-row">
             <div className="form-group">
               <label htmlFor="hoursPerWeek">
                 Hours per week
@@ -296,6 +290,7 @@ function SalaryForm({
                 type="number"
                 min="1"
                 max="168"
+                step="1"
                 value={hoursPerWeek}
                 onChange={handleHoursPerWeekChange}
                 disabled={loading}
@@ -312,30 +307,21 @@ function SalaryForm({
                 type="number"
                 min="1"
                 max="52"
+                step="1"
                 value={weeksPerYear}
                 onChange={handleWeeksPerYearChange}
                 disabled={loading}
               />
             </div>
           </div>
-
-          <div className="annual-equivalent">
-            Annual equivalent:{" "}
-            <strong>
-              $
-              {annualEquivalent.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </strong>
-          </div>
         </>
       )}
 
-      {/* State + Tax Year */}
       <div className="form-row">
         <div className="form-group">
-          <label htmlFor="state">State</label>
+          <label htmlFor="state">
+            State
+          </label>
 
           <select
             id="state"
@@ -363,7 +349,9 @@ function SalaryForm({
         </div>
 
         <div className="form-group">
-          <label htmlFor="taxYear">Tax year</label>
+          <label htmlFor="taxYear">
+            Tax year
+          </label>
 
           <select
             id="taxYear"
@@ -377,58 +365,56 @@ function SalaryForm({
         </div>
       </div>
 
-    {/* Filing Status */}
-<div className="form-group">
-  <label htmlFor="filingStatus">Filing status</label>
+      <div className="form-group">
+        <label htmlFor="filingStatus">
+          Filing status
+        </label>
 
-  <select
-    id="filingStatus"
-    value={filingStatus}
-    onChange={handleFilingStatusChange}
-    disabled={loading}
-  >
-    <option value="single">Single</option>
-    <option value="marriedjointly">
-      Married Filing Jointly
-    </option>
-    <option value="marriedseparately">
-      Married Filing Separately
-    </option>
-    <option value="headofhousehold">
-      Head of Household
-    </option>
-  </select>
-</div>
+        <select
+          id="filingStatus"
+          value={filingStatus}
+          onChange={handleFilingStatusChange}
+          disabled={loading}
+        >
+          <option value="single">Single</option>
+          <option value="marriedjointly">
+            Married Filing Jointly
+          </option>
+          <option value="marriedseparately">
+            Married Filing Separately
+          </option>
+          <option value="headofhousehold">
+            Head of Household
+          </option>
+        </select>
+      </div>
 
-{/* Pay Frequency */}
-<div className="form-group">
-  <label htmlFor="payFrequency">Pay frequency</label>
+      <div className="form-group">
+        <label htmlFor="payFrequency">
+          Pay frequency
+        </label>
 
-  <select
-    id="payFrequency"
-    value={payFrequency}
-    onChange={(event) => {
-      setPayFrequency(event.target.value);
-      onPayFrequencyChange(event.target.value);
-      setError("");
-      onInputChange();
-    }}
-    disabled={loading}
-  >
-    <option value="weekly">Weekly</option>
-    <option value="biweekly">Biweekly</option>
-    <option value="semimonthly">Semimonthly</option>
-    <option value="monthly">Monthly</option>
-  </select>
-</div>
-      {/* Error */}
+        <select
+          id="payFrequency"
+          value={payFrequency}
+          onChange={handlePayFrequencyChange}
+          disabled={loading}
+        >
+          <option value="weekly">Weekly</option>
+          <option value="biweekly">Every 2 weeks</option>
+          <option value="semimonthly">
+            Twice a month
+          </option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+
       {error && (
-        <div className="form-error" role="alert">
+        <div className="form-error">
           {error}
         </div>
       )}
 
-      {/* Calculate Button */}
       <button
         type="submit"
         className="calculate-button"

@@ -17,6 +17,10 @@ import NewJerseySalaryPage from "./pages/NewJerseySalaryPage";
 import MassachusettsSalaryPage from "./pages/MassachusettsSalaryPage";
 import type { SalaryResult as SalaryResultType } from "./types/salary";
 import NorthCarolinaSalaryPage from "./pages/NorthCarolinaSalaryPage";
+import Salary100kPage from "./pages/Salary100kPage";
+import Salary50kPage from "./pages/Salary50kPage";
+import Salary75kPage from "./pages/Salary75kPage";
+import Salary150kPage from "./pages/Salary150kPage";
 
 
 
@@ -157,6 +161,26 @@ function App() {
   path="/north-carolina-salary-calculator"
   element={<NorthCarolinaSalaryPage />}
 />
+
+<Route
+  path="/salary/100000"
+  element={<Salary100kPage />}
+/>
+
+<Route
+  path="/salary/50000"
+  element={<Salary50kPage />}
+/>
+
+<Route
+  path="/salary/75000"
+  element={<Salary75kPage />}
+/>
+<Route
+  path="/salary/150000"
+  element={<Salary150kPage />}
+/>
+
 
     </Routes>
     <Footer />
