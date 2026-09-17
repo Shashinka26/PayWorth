@@ -5,9 +5,18 @@ import { calculateSalary } from "../services/salaryApi";
 type SalaryFormProps = {
   onResult: (result: SalaryResult) => void;
   onInputChange: () => void;
+  onPayFrequencyChange: (frequency: string) => void;
+  initialState?: string;
+  initialTaxYear?: number;
 };
 
-function SalaryForm({ onResult, onInputChange }: SalaryFormProps) {
+function SalaryForm({
+  onResult,
+  onInputChange,
+  onPayFrequencyChange,
+  initialState = "CA",
+  initialTaxYear = 2026,
+}: SalaryFormProps) {
   const [annualSalary, setAnnualSalary] = useState("85000");
 
   const [inputMode, setInputMode] =
@@ -17,9 +26,10 @@ function SalaryForm({ onResult, onInputChange }: SalaryFormProps) {
   const [hoursPerWeek, setHoursPerWeek] = useState("40");
   const [weeksPerYear, setWeeksPerYear] = useState("52");
 
-  const [state, setState] = useState("CA");
+  const [state, setState] = useState(initialState);
   const [filingStatus, setFilingStatus] = useState("single");
-  const [taxYear, setTaxYear] = useState(2026);
+  const [taxYear, setTaxYear] = useState(initialTaxYear);
+  const [payFrequency, setPayFrequency] = useState("monthly");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -336,9 +346,14 @@ function SalaryForm({ onResult, onInputChange }: SalaryFormProps) {
             <option value="AK">Alaska</option>
             <option value="CA">California</option>
             <option value="FL">Florida</option>
+            <option value="IL">Illinois</option>
+            <option value="MA">Massachusetts</option>
             <option value="NH">New Hampshire</option>
             <option value="NV">Nevada</option>
             <option value="NY">New York</option>
+            <option value="NJ">New Jersey</option>
+            <option value="NC">North Carolina</option>
+            <option value="PA">Pennsylvania</option>
             <option value="SD">South Dakota</option>
             <option value="TN">Tennessee</option>
             <option value="TX">Texas</option>
@@ -362,31 +377,50 @@ function SalaryForm({ onResult, onInputChange }: SalaryFormProps) {
         </div>
       </div>
 
-      {/* Filing Status */}
-      <div className="form-group">
-        <label htmlFor="filingStatus">
-          Filing status
-        </label>
+    {/* Filing Status */}
+<div className="form-group">
+  <label htmlFor="filingStatus">Filing status</label>
 
-        <select
-          id="filingStatus"
-          value={filingStatus}
-          onChange={handleFilingStatusChange}
-          disabled={loading}
-        >
-          <option value="single">Single</option>
-          <option value="marriedjointly">
-            Married Filing Jointly
-          </option>
-          <option value="marriedseparately">
-            Married Filing Separately
-          </option>
-          <option value="headofhousehold">
-            Head of Household
-          </option>
-        </select>
-      </div>
+  <select
+    id="filingStatus"
+    value={filingStatus}
+    onChange={handleFilingStatusChange}
+    disabled={loading}
+  >
+    <option value="single">Single</option>
+    <option value="marriedjointly">
+      Married Filing Jointly
+    </option>
+    <option value="marriedseparately">
+      Married Filing Separately
+    </option>
+    <option value="headofhousehold">
+      Head of Household
+    </option>
+  </select>
+</div>
 
+{/* Pay Frequency */}
+<div className="form-group">
+  <label htmlFor="payFrequency">Pay frequency</label>
+
+  <select
+    id="payFrequency"
+    value={payFrequency}
+    onChange={(event) => {
+      setPayFrequency(event.target.value);
+      onPayFrequencyChange(event.target.value);
+      setError("");
+      onInputChange();
+    }}
+    disabled={loading}
+  >
+    <option value="weekly">Weekly</option>
+    <option value="biweekly">Biweekly</option>
+    <option value="semimonthly">Semimonthly</option>
+    <option value="monthly">Monthly</option>
+  </select>
+</div>
       {/* Error */}
       {error && (
         <div className="form-error" role="alert">
